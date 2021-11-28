@@ -268,9 +268,10 @@ if __name__ == '__main__':
         df_shogo_dxfs = pd.DataFrame(columns=contents_columns)
         df_shogo_fusen = pd.DataFrame(columns=contents_columns)
         df_shogo_tekiyohyo = pd.DataFrame(columns=contents_columns)
-        # 表示・表紙
+        # 表紙の適用表
         if len(df_hyoshi):
             st.write(df_hyoshi.iloc[1]['item'])
+            # 適用表の表紙
             df_cover = df_cover.append({'種類': '摘要表',
                                         '図種': '-',
                                         '設備名': df_hyoshi.iloc[0]['item'],
@@ -281,7 +282,7 @@ if __name__ == '__main__':
                                         '検認': df_hyoshi.iloc[6]['item'],
                                         '作成日付': None
                                         }, ignore_index=True, )
-        # 表示・組図
+        # 表紙の組図
         if len(df_assy):
             # 組図の文字列（df_assy）から摘要表と照合するところを取得し、半角にする
             assay_tekiyohyo_list = df_assy[df_assy['target'] == '摘要表']['input'].to_list()
@@ -292,7 +293,7 @@ if __name__ == '__main__':
             s_assay_hyoshi_han = s_assay_hyoshi.apply(lambda x: x.translate(ZEN2HAN))
             assay_tekiyohyo_han_list = s_assay_tekiyohyo_han.to_list()
             assay_hyoshi_han_list = s_assay_hyoshi_han.to_list()
-            # df_cover…摘要表の表紙を照合する組図
+            # 組図の表紙
             df_cover = df_cover.append({'種類': '組図',
                                         '図種': assay_tekiyohyo_han_list[0],
                                         '設備名': assay_hyoshi_han_list[0],
@@ -309,6 +310,7 @@ if __name__ == '__main__':
             kumizu_zumenbango = assay_tekiyohyo_han_list[
                 1].lstrip("NA") if assay_tekiyohyo_han_list[1][:2] == "NA" else \
                 assay_tekiyohyo_han_list[1]
+            # 適用表内容と照合する組図の枠情報
             df_shogo_dxfs = df_shogo_dxfs.append({'種類': '組図',
                                                   '品名': assay_tekiyohyo_han_list[0],
                                                   '図面番号': kumizu_zumenbango,
@@ -329,9 +331,8 @@ if __name__ == '__main__':
                 s_buhinzu_hyoshi = pd.Series(buhinzu_hyoshi_list)
                 s_buhinzu_hyoshi_han = s_buhinzu_hyoshi.apply(lambda x: x.translate(ZEN2HAN))
                 buhinzu_hyoshi_han_list = s_buhinzu_hyoshi_han.to_list()
-                # 表紙編
-                # print(df_buhinzu)
                 # df_cover…摘要表の表紙を照合する組図・部品図
+                # 適用表表紙と照合する部品図の枠情報
                 df_cover = df_cover.append({'種類': '部品図',
                                             '図種': df_buhinzu[df_buhinzu['target'] == '摘要表'].iloc[0][
                                                 'input'],
@@ -357,7 +358,7 @@ if __name__ == '__main__':
                     assay_buhinzu_han_list[1]
                 buhinzu_fukuban = assay_buhinzu_han_list[7] if assay_buhinzu_han_list[
                                                                    7] != "" else "-"
-
+                # 適用表内容と照合する部品図の枠情報
                 df_shogo_dxfs = df_shogo_dxfs.append({'種類': '部品図',
                                                       '品名': buhinzu_hinmei,
                                                       '図面番号': buhinzu_zumenbango,
@@ -370,7 +371,7 @@ if __name__ == '__main__':
                                                       '必要数': int(assay_buhinzu_han_list[6]),
                                                       }, ignore_index=True, )
         if len(df_assy):
-            # 組図風船編
+            # 適用表内容と照合する組図の風船情報
             df_fusen = kumizu_list[2]
             df_shogo_fusen['品名'] = df_fusen['品名'].apply(lambda x: x.replace(' ', ''))
             df_shogo_fusen['図面番号'] = df_fusen['図面番号']
@@ -391,103 +392,109 @@ if __name__ == '__main__':
             'nothing': 0,
         }
         for id, row in df_tekiyohyo.iterrows():
-            # 摘要表１行ずつ
             shogo_ok = False
-            df_shogo_tekiyohyo = df_shogo_tekiyohyo.append({'照合': '-',
+            # 摘要表１行ずつ
+            df_shogo_tekiyohyo = df_shogo_tekiyohyo.append({'ID': id,
+                                                            '照合': '-',
                                                             '種類': '摘要表',
-                                                            '品名': row['品名'],
-                                                            '図面番号': row['図面番号'],
-                                                            '副番': row['副番'],
-                                                            '品番': row['品番'],
-                                                            '材料': row['材料'],
-                                                            '熱処理': row['熱処理'],
-                                                            '表面処理': row['表面処理'],
-                                                            '数/SET': row['数/SET'],
-                                                            '必要数': row['必要数'],
+                                                            '品名': str(row['品名']),
+                                                            '図面番号': str(row['図面番号']),
+                                                            '副番': str(row['副番']),
+                                                            '品番': str(row['品番']),
+                                                            '材料': str(row['材料']),
+                                                            '熱処理': str(row['熱処理']),
+                                                            '表面処理': str(row['表面処理']),
+                                                            '数/SET': str(row['数/SET']),
+                                                            '必要数': str(row['必要数']),
                                                             }, ignore_index=True, )
-            # df_shogo_dxfsの中から摘要表の品名と一致する行を検索する
-            if selected_row == ['品名']:
-                df_match_dxfs = df_shogo_dxfs[(df_shogo_dxfs['品名'] == row['品名'])]
-            elif selected_row == ['図面番号']:
-                df_match_dxfs = df_shogo_dxfs[(df_shogo_dxfs['図面番号'] == row['図面番号'])]
-            else:
-                df_match_dxfs = df_shogo_dxfs[
-                    (df_shogo_dxfs['品名'] == row['品名']) & (df_shogo_dxfs['図面番号'] == row['図面番号'])]
+            # df_shogo_dxfs「適用表内容と照合するデータ」の中から摘要表の品名と一致する行を検索する
+            # 品名:一致 図面番号:不一致 行のみ取得する
+            df_match_dxfs = df_shogo_dxfs[
+                (df_shogo_dxfs['品名'] == row['品名']) & (df_shogo_dxfs['図面番号'] != row['図面番号'])]
+            # 品名:不一致 図面番号:一致 行のみ取得する
+            df_match_dxfs_tmp = df_shogo_dxfs[
+                (df_shogo_dxfs['品名'] != row['品名']) & (df_shogo_dxfs['図面番号'] == row['図面番号'])]
+            df_match_dxfs = df_match_dxfs.append(df_match_dxfs_tmp)
+            # 品名:一致 図面番号:一致 行のみ取得する
+            df_match_dxfs_tmp = df_shogo_dxfs[
+                (df_shogo_dxfs['品名'] == row['品名']) & (df_shogo_dxfs['図面番号'] == row['図面番号'])]
+            df_match_dxfs = df_match_dxfs.append(df_match_dxfs_tmp)
             if len(df_match_dxfs):
-                # 一致する品名があれば・・・
+                # 一致する行があれば・・・
                 for i, match_row in df_match_dxfs.iterrows():
-                    zumenbango = match_row['図面番号'] == row['図面番号']
-                    hinban = match_row['品番'] == row['品番']
-                    fukuban = match_row['副番'] == row['副番']
-                    zairyo = match_row['材料'] == row['材料']
-                    netsushori = match_row['熱処理'] == row['熱処理']
-                    hyomenshori = match_row['表面処理'] == row['表面処理']
-                    kazuset = match_row['数/SET'] == row['数/SET']
-                    hitsuyosu = match_row['必要数'] == row['必要数']
-                    if match_row['種類'] == "組図":
-                        # 図面番号　品番
-                        match_condition = zumenbango and hinban
-                    elif match_row['種類'] == "部品図":
-                        # 図面番号　品番　材料
-                        match_condition = zumenbango and hinban and fukuban and zairyo
-                    else:
-                        match_condition = zumenbango and hinban and fukuban
-                    if match_condition:
-                        shogo = '◎'
-                        shogo_ok = True
-                    elif not zumenbango:
-                        shogo = '×図面番号'
-                    elif not fukuban:
-                        shogo = '×副番'
-                    elif not hinban:
-                        shogo = '×品番'
-                    else:
-                        shogo = '×その他'
-                    df_shogo_tekiyohyo = df_shogo_tekiyohyo.append({'照合': shogo,
-                                                                    '種類': match_row['種類'],
-                                                                    '品名': match_row['品名'],
-                                                                    '図面番号': match_row['図面番号'],
-                                                                    '副番': match_row['副番'],
-                                                                    '品番': match_row['品番'],
-                                                                    '材料': match_row['材料'],
-                                                                    '熱処理': match_row['熱処理'],
-                                                                    '表面処理': match_row['表面処理'],
-                                                                    '数/SET': match_row['数/SET'],
-                                                                    '必要数': match_row['必要数'],
+                    # 適用表の下の行に、照合一致の行を追加する
+                    df_shogo_tekiyohyo = df_shogo_tekiyohyo.append({'ID': id,
+                                                                    '照合': '-',
+                                                                    '種類': str(match_row['種類']),
+                                                                    '品名': str(match_row['品名']),
+                                                                    '図面番号': str(match_row['図面番号']),
+                                                                    '副番': str(match_row['副番']),
+                                                                    '品番': str(match_row['品番']),
+                                                                    '材料': str(match_row['材料']),
+                                                                    '熱処理': str(match_row['熱処理']),
+                                                                    '表面処理': str(match_row['表面処理']),
+                                                                    '数/SET': str(match_row['数/SET']),
+                                                                    '必要数': str(match_row['必要数']),
                                                                     }, ignore_index=True, )
+                    shogo_result = {
+                        'ID': id,
+                        '照合': '-',
+                        '種類': '-',
+                        '品名': '-',
+                        '図面番号': '-',
+                        '副番': '-',
+                        '品番': '-',
+                        '材料': '-',
+                        '熱処理': '-',
+                        '表面処理': '-',
+                        '数/SET': '-',
+                        '必要数': '-',
+                    }
+                    # 一致行を1行ずつ確認する
+                    hinmei = True if match_row['品名'] == row['品名'] else False
+                    zumenbango = True if match_row['図面番号'] == row['図面番号'] else False
+                    hinban = True if match_row['品番'] == row['品番'] else False
+                    fukuban = True if match_row['副番'] == row['副番'] else False
+                    zairyo = True if match_row['材料'] == row['材料'] else False
+                    netsushori = True if match_row['熱処理'] == row['熱処理'] else False
+                    hyomenshori = True if match_row['表面処理'] == row['表面処理'] else False
+                    kazuset = True if match_row['数/SET'] == row['数/SET'] else False
+                    hitsuyosu = True if match_row['必要数'] == row['必要数'] else False
+                    if match_row['種類'] == "組図":
+                        # 適用表と組図の枠 => 「図面番号」と「品番」の照合一致
+                        shogo_result['品名'] = '〇' if hinmei else '×'
+                        shogo_result['図面番号'] = '〇' if zumenbango else '×'
+                        shogo_result['品番'] = '〇' if hinban else '×'
+                        shogo_result['照合'] = 'OK' if (hinmei and zumenbango and hinban) else 'NG'
+                    elif match_row['種類'] == "部品図":
+                        # 適用表と部品図の枠 => 「図面番号」と「品番」と「副番」と「材料」の照合一致
+                        shogo_result['品名'] = '〇' if hinmei else '×'
+                        shogo_result['図面番号'] = '〇' if zumenbango else '×'
+                        shogo_result['品番'] = '〇' if hinban else '×'
+                        shogo_result['副番'] = '〇' if fukuban else '×'
+                        shogo_result['材料'] = '〇' if zairyo else '×'
+                        shogo_result['照合'] = 'OK' if (hinmei and zumenbango and hinban and fukuban and zairyo) else 'NG'
+                    else:
+                        # 適用表と組図風船の枠 => 「図面番号」と「品番」と「副番」の照合一致
+                        shogo_result['品名'] = '〇' if hinmei else '×'
+                        shogo_result['図面番号'] = '〇' if zumenbango else '×'
+                        shogo_result['品番'] = '〇' if hinban else '×'
+                        shogo_result['副番'] = '〇' if fukuban else '×'
+                    # 適用表の下の行に、照合一致の行を追加する
+                    df_shogo_tekiyohyo = df_shogo_tekiyohyo.append(shogo_result, ignore_index=True, )
                 if shogo_ok:
+                    # OK数を+1する
                     count_dict['ok'] += 1
                 else:
+                    # NG数を+1する
                     count_dict['ng'] += 1
             else:
+                # NOTHINGを+1する
                 count_dict['nothing'] += 1
-            # 空白行
-            df_shogo_tekiyohyo = df_shogo_tekiyohyo.append({'照合': " ",
-                                                            '種類': " ",
-                                                            '品名': " ",
-                                                            '図面番号': " ",
-                                                            '副番': " ",
-                                                            '品番': 0,
-                                                            '材料': " ",
-                                                            '熱処理': " ",
-                                                            '表面処理': " ",
-                                                            '数/SET': 0,
-                                                            '必要数': 0,
-                                                            }, ignore_index=True, )
 
         # 一致・不一致表示
         # st.markdown('#### 照合対象編')
         # st.dataframe(df_shogo_dxfs)
-        shogo_list = ['ALL', '◎', '×図面番号', '×品番', '×副番', '×その他', 'Ｘ']
-        selected_shogo = st.multiselect('表示する照合結果を選択する', shogo_list, default=['ALL'])
-        if 'ALL' in selected_shogo:
-            selected_shogo = shogo_list[1:]
-        elif 'Ｘ' in selected_shogo:
-            selected_shogo.extend(['×図面番号', '×品番', '×副番', '×その他'])
-        selected_shogo.append('-')
-        selected_shogo.append(' ')
-        df_shogo_tekiyohyo_selected = df_shogo_tekiyohyo[
-            (df_shogo_tekiyohyo['照合'].isin(selected_shogo))]
         st.write("摘要表と各図面の照合結果")
         # col1, col2, col3 = st.columns(3)
         # with col1:
@@ -499,9 +506,10 @@ if __name__ == '__main__':
         # with col3:
         st.markdown("##### 照合なし数")
         st.markdown(f"# {count_dict['nothing']}")
-        # df_count = pd.DataFrame.from_dict(count_dict, orient='index')
-        # st.table(df_count)
-        st.table(df_shogo_tekiyohyo_selected)
+        id_list = df_shogo_tekiyohyo['ID'].unique().tolist()
+        for unique_id in id_list:
+            df_shogo_tekiyohyo_id = df_shogo_tekiyohyo[df_shogo_tekiyohyo['ID'] == unique_id]
+            st.table(df_shogo_tekiyohyo_id)
 
     if selected_app == app[1]:
         # 詳細データ
